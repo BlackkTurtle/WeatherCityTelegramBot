@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  weathercitytelegrambot.api:
+    image: ${DOCKER_REGISTRY-}weathercitytelegrambotapi
+    networks:
+      - weathercitytelegrambot
+    build:
+      context: .
+      dockerfile: WeatherCityTelegramBot.API/Dockerfile
+    ports:
+      - 8001:8080
+    depends_on:
+      - mssql
+
+  mssql:
+    container_name: mssql
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Qwerty123
+    networks:
+      - weathercitytelegrambot
+    ports:
+      - 1433:1433
+
+networks:
+  weathercitytelegrambot:
+    driver: bridge
