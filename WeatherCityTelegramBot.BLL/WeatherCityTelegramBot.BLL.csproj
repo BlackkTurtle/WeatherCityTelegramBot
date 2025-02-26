@@ -10,7 +10,12 @@
     <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WeatherCityTelegramBot.DAL\WeatherCityTelegramBot.DAL.csproj" />
   </ItemGroup>
 </Project>
