@@ -2,6 +2,8 @@ using Microsoft.Data.SqlClient;
 using System.Data;
 using WeatherCityTelegramBot.API.HostBuilders.TelegramBot;
 using WeatherCityTelegramBot.BLL.EnvironmentVariables;
+using WeatherCityTelegramBot.BLL.Services;
+using WeatherCityTelegramBot.BLL.Services.Contracts;
 using WeatherCityTelegramBot.DAL.Persistence;
 using WeatherCityTelegramBot.DAL.Persistence.Contracts;
 using WeatherCityTelegramBot.DAL.Repositories;
@@ -15,14 +17,22 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddLogging();
+builder.Services.AddHttpClient();
 
 // Connection/Transaction DAPPER database
-builder.Services.AddScoped((s) => new SqlConnection(builder.Configuration.GetConnectionString("MSSQLConnection")));
+var conn = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddScoped((s) => new SqlConnection(conn));
+builder.Services.AddScoped<IDbConnection>((s) =>
+{
+    var connection = new SqlConnection(conn);
+    connection.Open(); // Ensure connection stays open for scoped lifetime
+    return connection;
+});
+
 builder.Services.AddScoped<IDbTransaction>(s =>
 {
-    SqlConnection conn = s.GetRequiredService<SqlConnection>();
-    conn.Open();
-    return conn.BeginTransaction();
+    var connection = s.GetRequiredService<IDbConnection>();
+    return connection.BeginTransaction();
 });
 
 // Environment Variables
@@ -37,6 +47,9 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // Telegram Bot
 builder.Services.AddSingleton<TelegramBotHost>();
+
+// HttpClients
+builder.Services.AddHttpClient<IWeatherApiService, WeatherApiService>();
 
 var app = builder.Build();
 

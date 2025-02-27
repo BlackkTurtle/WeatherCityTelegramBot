@@ -12,7 +12,7 @@ namespace WeatherCityTelegramBot.DAL.Repositories
 {
     public class UserRepository : GenericRepository<User>, IUserRepository
     {
-        public UserRepository(SqlConnection sqlConnection, IDbTransaction dbtransaction) : base(sqlConnection, dbtransaction, "Users", "Id")
+        public UserRepository(IDbConnection sqlConnection, IDbTransaction dbtransaction) : base(sqlConnection, dbtransaction, "Users", "Id")
         {
         }
     }

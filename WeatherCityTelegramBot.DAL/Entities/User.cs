@@ -9,7 +9,6 @@ namespace WeatherCityTelegramBot.DAL.Entities
     public class User
     {
         public int Id { get; set; }
-        public string UserId { get; set; }
         public DateTime StartDate { get; set; }
     }
 }

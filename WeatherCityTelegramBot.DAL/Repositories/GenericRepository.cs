@@ -14,41 +14,39 @@ namespace WeatherCityTelegramBot.DAL.Repositories
     public abstract class GenericRepository<T> : IGenericRepository<T> where T : class
     {
 
-        protected SqlConnection _sqlConnection;
+        protected IDbConnection dbConnection;
 
         protected IDbTransaction _dbTransaction;
 
         private readonly string _tableName;
         private readonly string _idName;
 
-        protected GenericRepository(SqlConnection sqlConnection, IDbTransaction dbTransaction, string tableName, string idName)
+        protected GenericRepository(IDbConnection dbConnection, IDbTransaction dbTransaction, string tableName, string idName)
         {
-            _sqlConnection = sqlConnection;
             _dbTransaction = dbTransaction;
             _tableName = tableName;
             _idName = idName;
+            this.dbConnection = dbConnection;
         }
 
 
         public async Task<IEnumerable<T>> GetAllAsync()
         {
-            return await _sqlConnection.QueryAsync<T>($"SELECT * FROM {_tableName}",
+            return await dbConnection.QueryAsync<T>($"SELECT * FROM {_tableName}",
                 transaction: _dbTransaction);
         }
 
         public async Task<T> GetAsync(int id)
         {
-            var result = await _sqlConnection.QuerySingleOrDefaultAsync<T>($"SELECT * FROM {_tableName} WHERE {_idName}=@Id",
+            var result = await dbConnection.QuerySingleOrDefaultAsync<T>($"SELECT * FROM {_tableName} WHERE {_idName}=@Id",
                 param: new { Id = id },
                 transaction: _dbTransaction);
-            if (result == null)
-                throw new KeyNotFoundException($"{_tableName} with id [{id}] could not be found.");
             return result;
         }
 
         public async Task DeleteAsync(int id)
         {
-            await _sqlConnection.ExecuteAsync($"DELETE FROM {_tableName} WHERE {_idName}=@Id",
+            await dbConnection.ExecuteAsync($"DELETE FROM {_tableName} WHERE {_idName}=@Id",
                 param: new { Id = id },
                 transaction: _dbTransaction);
         }
@@ -56,7 +54,7 @@ namespace WeatherCityTelegramBot.DAL.Repositories
         public async Task<int> AddAsync(T t)
         {
             var insertQuery = GenerateInsertQuery();
-            var newId = await _sqlConnection.ExecuteScalarAsync<int>(insertQuery,
+            var newId = await dbConnection.ExecuteScalarAsync<int>(insertQuery,
                 param: t,
                 transaction: _dbTransaction);
             return newId;
@@ -66,7 +64,7 @@ namespace WeatherCityTelegramBot.DAL.Repositories
         {
             var inserted = 0;
             var query = GenerateInsertQuery();
-            inserted += await _sqlConnection.ExecuteAsync(query,
+            inserted += await dbConnection.ExecuteAsync(query,
                 param: list);
             return inserted;
         }
@@ -75,7 +73,7 @@ namespace WeatherCityTelegramBot.DAL.Repositories
         public async Task ReplaceAsync(T t)
         {
             var updateQuery = GenerateUpdateQuery();
-            await _sqlConnection.ExecuteAsync(updateQuery,
+            await dbConnection.ExecuteAsync(updateQuery,
                 param: t,
                 transaction: _dbTransaction);
         }
@@ -111,7 +109,10 @@ namespace WeatherCityTelegramBot.DAL.Repositories
             insertQuery.Append("(");
             var properties = GenerateListOfProperties(GetProperties);
 
-            properties.Remove($"{_idName}");
+            if (_tableName != "Users")
+            {
+                properties.Remove($"{_idName}");
+            }
             //
             properties.ForEach(prop => { insertQuery.Append($"[{prop}],"); });
             insertQuery
