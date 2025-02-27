@@ -21,17 +21,17 @@ builder.Services.AddHttpClient();
 
 // Connection/Transaction DAPPER database
 var conn = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddScoped((s) => new SqlConnection(conn));
-builder.Services.AddScoped<IDbConnection>((s) =>
+
+builder.Services.AddScoped<SqlConnection>(s =>
 {
-    var connection = new SqlConnection(conn);
-    connection.Open(); // Ensure connection stays open for scoped lifetime
+    var connection = new SqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"));
+    connection.Open();
     return connection;
 });
 
 builder.Services.AddScoped<IDbTransaction>(s =>
 {
-    var connection = s.GetRequiredService<IDbConnection>();
+    var connection = s.GetRequiredService<SqlConnection>();
     return connection.BeginTransaction();
 });
 

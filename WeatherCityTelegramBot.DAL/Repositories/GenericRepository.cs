@@ -14,14 +14,14 @@ namespace WeatherCityTelegramBot.DAL.Repositories
     public abstract class GenericRepository<T> : IGenericRepository<T> where T : class
     {
 
-        protected IDbConnection dbConnection;
+        protected SqlConnection dbConnection;
 
         protected IDbTransaction _dbTransaction;
 
         private readonly string _tableName;
         private readonly string _idName;
 
-        protected GenericRepository(IDbConnection dbConnection, IDbTransaction dbTransaction, string tableName, string idName)
+        protected GenericRepository(SqlConnection dbConnection, IDbTransaction dbTransaction, string tableName, string idName)
         {
             _dbTransaction = dbTransaction;
             _tableName = tableName;
@@ -123,7 +123,7 @@ namespace WeatherCityTelegramBot.DAL.Repositories
             insertQuery
                 .Remove(insertQuery.Length - 1, 1)
                 .Append(")");
-            insertQuery.Append("; SELECT SCOPE_IDENTITY()");
+            //insertQuery.Append("; SELECT SCOPE_IDENTITY()");
             return insertQuery.ToString();
         }
     }

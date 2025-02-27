@@ -12,7 +12,7 @@ namespace WeatherCityTelegramBot.DAL.Repositories
 {
     public class WeatherHistoryRepository : GenericRepository<WeatherHistory>, IWeatherHistoryRepository
     {
-        public WeatherHistoryRepository(IDbConnection sqlConnection, IDbTransaction dbtransaction) : base(sqlConnection, dbtransaction, "WeatherHistories", "Id")
+        public WeatherHistoryRepository(SqlConnection sqlConnection, IDbTransaction dbtransaction) : base(sqlConnection, dbtransaction, "WeatherHistories", "Id")
         {
         }
     }

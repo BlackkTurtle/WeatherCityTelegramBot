@@ -15,14 +15,14 @@ namespace WeatherCityTelegramBot.API.HostBuilders.TelegramBot
     {
         public TelegramBotClient telegramBotClient;
         private readonly ILogger<TelegramBotHost> logger;
-        IServiceScope serviceScope;
+        IServiceScopeFactory serviceScopeFactory;
         private readonly IWeatherApiService weatherApiService;
 
         public TelegramBotHost(IConfiguration configuration, ILogger<TelegramBotHost> logger, IServiceScopeFactory serviceScopeFactory, IWeatherApiService weatherApiService)
         {
             telegramBotClient = new TelegramBotClient(configuration.GetValue<string>("TelegramBotToken") ?? "");
             this.logger = logger;
-            serviceScope = serviceScopeFactory.CreateScope();
+            this.serviceScopeFactory = serviceScopeFactory;
             this.weatherApiService = weatherApiService;
         }
 
@@ -43,6 +43,7 @@ namespace WeatherCityTelegramBot.API.HostBuilders.TelegramBot
             {
                 logger.LogInformation($"Received /start message from: {update.Message.Chat.Username}");
 
+                var serviceScope = serviceScopeFactory.CreateScope();
                 var unitOfWork = serviceScope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 var userFromDB = await unitOfWork.UserRepository.GetAsync((int)update.Message.Chat.Id);
 
@@ -64,7 +65,7 @@ namespace WeatherCityTelegramBot.API.HostBuilders.TelegramBot
             {
                 string input = update.Message?.Text!;
                 string city = input.Length > "/weather".Length ? input.Substring("/weather".Length).Trim() : "";
-                if (city.IsNullOrEmpty()) 
+                if (city.IsNullOrEmpty())
                 {
                     await client.SendMessage(update.Message!.Chat.Id, "Parameter {city} could not be null,\n" +
                         " this command should be used in this format \n" +
@@ -88,6 +89,7 @@ namespace WeatherCityTelegramBot.API.HostBuilders.TelegramBot
                             UserId = (int)update.Message!.Chat.Id
                         };
 
+                        var serviceScope = serviceScopeFactory.CreateScope();
                         var unitOfWork = serviceScope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         var userFromDB = await unitOfWork.WeatherHistoryRepository.AddAsync(weatherHistory);
 
@@ -111,5 +113,19 @@ namespace WeatherCityTelegramBot.API.HostBuilders.TelegramBot
             }
             await Task.CompletedTask;
         }
-    }
+
+        public async Task SendWeatherToUser(int chatId, WeatherDTO weatherDTO)
+        {
+            await telegramBotClient.SendMessage(chatId, "Current weather in your city:\n\n" +
+    $"   Latitude: {weatherDTO.Latitude}\n" +
+    $"   Longitude: {weatherDTO.Longitude}\n" +
+    $"   Resolved Address: {weatherDTO.ReasolvedAddress}\n" +
+    $"   Address: {weatherDTO.Address}\n" +
+    $"   Timezone: {weatherDTO.Timezone}\n" +
+    $"   Tzoffset: {weatherDTO.Tzoffset}\n" +
+    $"   Description: {weatherDTO.Description}\n\n" +
+    $"To check weather in other cities use command:\n" +
+    "   /weather {city}");
+        }
+    } 
 }
