@@ -56,6 +56,8 @@ namespace WeatherCityTelegramBot.API.HostBuilders.TelegramBot
                     };
 
                     await unitOfWork.UserRepository.AddAsync(user);
+
+                    unitOfWork.Commit();
                 }
 
                 await client.SendMessage(update.Message.Chat.Id, "List of commands:\n" +
@@ -92,6 +94,8 @@ namespace WeatherCityTelegramBot.API.HostBuilders.TelegramBot
                         var serviceScope = serviceScopeFactory.CreateScope();
                         var unitOfWork = serviceScope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                         var userFromDB = await unitOfWork.WeatherHistoryRepository.AddAsync(weatherHistory);
+
+                        unitOfWork.Commit();
 
                         await client.SendMessage(update.Message!.Chat.Id, "Current weather in your city:\n\n" +
                             $"   Latitude: {weatherDTO.Latitude}\n" +
